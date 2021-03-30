@@ -1,0 +1,15 @@
+﻿#pragma kernel AreaCompute
+
+StructuredBuffer<float3> Vertices;
+StructuredBuffer<int1> Triangles;
+RWStructuredBuffer<float> TrianglesArea;
+
+[numthreads(1, 1, 1)]
+void AreaCompute(uint3 id: SV_DispatchThreadID)
+{
+    float3 a = Vertices[Triangles[id.x * 3 + 1].x] - Vertices[Triangles[id.x * 3].x];
+    float3 b = Vertices[Triangles[id.x * 3 + 2].x] - Vertices[Triangles[id.x * 3].x];
+
+    TrianglesArea[id.x] = distance(cross(a, b), 0) / 2.0f;
+}
+

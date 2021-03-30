@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<L-System_ForUnity-1.0>
+  <Model Name="Base Rule" Step="1" AllSteps="33" Rule="@B(1)%%**B(i):(i&lt;MAX_INTERNODE_NUM) --&gt; I(i)+(180)L(i)B(i+1)%%**B(i):(i==MAX_INTERNODE_NUM) --&gt; I(i)+(180)L(i)E(1)%%**I(section) --&gt; F(1,section)%%**L(section):(section&lt;9) --&gt; [-(10*(section-1)*RANDOM-20)/(110)%(Leaf,section,1)]%%**L(section):(section==15) --&gt; [-(RANDOM*20-10)C(1)/(110)%(Leaf,section,1)]%%**L(section):(section==MAX_INTERNODE_NUM) --&gt; [-(RANDOM*20-10)/(80)%(Leaf,section,1)]%%**L(section) --&gt; [-(RANDOM*20-10)/(110)%(Leaf,section,1)]%%**C(i):(i==0) --&gt; [/(70)%(Corn)%(Hair)]/(-10)%%**C(i) --&gt; C(i-1)%%**E(i):(i==0) --&gt; %(Flower)%%**E(i) --&gt; E(i-1)%%**%(leaf,section,age):(section&lt;16&amp;age==1) --&gt; (0.5)%(Leaf00,section,age+1)%%**%(leaf,section,age):(section&lt;16&amp;age==1) --&gt; (0.5)%(Leaf01,section,age+1)%%**%(leaf,section,age):(section&lt;16&amp;age==5) --&gt; (0.5)%(Leaf10,section,age+1)%%**%(leaf,section,age):(section&lt;16&amp;age==5) --&gt; (0.5)%(Leaf11,section,age+1)%%**%(leaf,section,age):(section&lt;16&amp;age==10) --&gt; (0.5)%(Leaf20,section,age+1)%%**%(leaf,section,age):(section&lt;16&amp;age==10) --&gt; (0.5)%(Leaf21,section,age+1)%%**%(leaf,section,age):(section&lt;16&amp;age==15) --&gt; (0.5)%(Leaf30,section,age+1)%%**%(leaf,section,age):(section&lt;16&amp;age==15) --&gt; (0.5)%(Leaf31,section,age+1)%%**%(leaf,section,age):(section&gt;15&amp;section&lt;MAX_INTERNODE_NUM&amp;age==1) --&gt; %(HighLeaf0,section,age+1)%%**%(leaf,section,age):(section&gt;15&amp;section&lt;MAX_INTERNODE_NUM&amp;age==3) --&gt; %(HighLeaf1,section,age+1)%%**%(leaf,section,age):(section==MAX_INTERNODE_NUM&amp;age==1) --&gt; %(MaleLeaf,section,age+1)%%**%(leaf,section,age) --&gt; %(leaf,section,age+1)%%**+(angle):(angle&gt;=85&amp;angle&lt;=105) --&gt; +(RANDOM*40+10)%%**/(angle):(angle&gt;=90) --&gt; /(angle-5)%%**" Texture="Textures\玉米\AG20brn2.jpg">
+    <Variable VName="MAX_INTERNODE_NUM" VValue="21" VMax="33" VMin="0" VDesc="" />
+    <Mesh MName="Leaf" MPath="Meshes\玉米\leaf - yong.obj" MTexPath="Textures\玉米\AG20lef3.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf00" MPath="Meshes\玉米\leaf0_Wide.obj" MTexPath="Textures\玉米\AG20lef3.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf01" MPath="Meshes\玉米\leaf01.obj" MTexPath="Textures\玉米\AG20lef3.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf10" MPath="Meshes\玉米\leaf1_Wide.obj" MTexPath="Textures\玉米\AG20lef2.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf11" MPath="Meshes\玉米\leaf11.obj" MTexPath="Textures\玉米\AG20lef2.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf20" MPath="Meshes\玉米\leaf2_Wide.obj" MTexPath="Textures\玉米\AG20lef2.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf21" MPath="Meshes\玉米\leaf21.obj" MTexPath="Textures\玉米\AG20lef2.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf30" MPath="Meshes\玉米\leaf3_Wide.obj" MTexPath="Textures\玉米\AG20lef1.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Leaf31" MPath="Meshes\玉米\leaf31.obj" MTexPath="Textures\玉米\AG20lef1.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="Flower" MPath="Meshes\玉米\flower.obj" MTexPath="Textures\玉米\flower.dds" MMaxSize="0" MSize="0" MType="Flower" />
+    <Mesh MName="Corn" MPath="Meshes\玉米\corn.obj" MTexPath="Textures\玉米\leafOfCorn.dds" MMaxSize="0" MSize="0" MType="Fruit" />
+    <Mesh MName="Hair" MPath="Meshes\玉米\hair.obj" MTexPath="Textures\玉米\AG20frt3.dds" MMaxSize="0" MSize="0" MType="Fruit" />
+    <Mesh MName="HighLeaf0" MPath="Meshes\玉米\HighLeaf0.obj" MTexPath="Textures\玉米\AG20lef3.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="HighLeaf1" MPath="Meshes\玉米\HighLeaf1.obj" MTexPath="Textures\玉米\AG20lef2.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+    <Mesh MName="MaleLeaf" MPath="Meshes\玉米\MaleLeaf.obj" MTexPath="Textures\玉米\AG20lef2.dds" MMaxSize="0" MSize="0" MType="Leaf" />
+  </Model>
+</L-System_ForUnity-1.0>

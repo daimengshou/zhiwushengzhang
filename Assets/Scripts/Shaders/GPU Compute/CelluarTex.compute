@@ -1,0 +1,255 @@
+﻿#pragma kernel FindNearestPoint
+#pragma kernel FindNearestCenterPoint
+#pragma kernel FindNearestFeaturePoint
+#pragma kernel WormholeCreate
+
+/************计算与像素最近的特征点***************/
+struct PixelInfo
+{
+    float distance;
+    float2 nearestPoint;
+};
+
+StructuredBuffer<float2> CenterPoints;              //中心点集
+StructuredBuffer<float2> FeaturePoints;		        //特征点集
+StructuredBuffer<PixelInfo> FeaturePointInfos;      //各特征点信息
+RWStructuredBuffer<PixelInfo> Result;		//结果
+
+int width;					//纹理宽
+int height;					//纹理长
+
+bool IsSamePoint(float2 point0, float2 point1)
+{
+    return point0.x == point1.x && point0.y == point1.y;
+}
+
+bool IsFeaturePoint(uint3 id)
+{
+    uint featurePointsCount, featurePointsStride;
+    FeaturePoints.GetDimensions(featurePointsCount, featurePointsStride);   //获取特征点集的个数
+
+    //遍历特征点集，确定该像素是否为特征点
+    for (uint i = 0; i < featurePointsCount; i++)
+    {
+        if (IsSamePoint(id.xy, FeaturePoints[i]))
+            return true;
+    }
+
+    return false;
+}
+
+void FindCenterPointClosestToPixel(uint3 id, inout float distance_c, inout float index_CenterPoint)
+{
+    uint centerPointsCount, centerPointsStride;
+    CenterPoints.GetDimensions(centerPointsCount, centerPointsStride);
+
+    //寻找最近的中心点，以及该像素与该中心点之间的距离Dc
+    for (int i = 0; i < centerPointsCount; i++)
+    {
+        float _distance = distance(CenterPoints[i], id.xy);
+        if (_distance < distance_c)
+        {
+            distance_c = _distance;
+            index_CenterPoint = i;
+        }
+    }
+}
+
+void FindFeaturePointClosestToPixel(uint3 id, float distance_c, float index_CenterPoint, inout float distance_f, inout float index_FeaturePoint)
+{
+    uint featurePointsCount, featurePointsStride;
+    FeaturePoints.GetDimensions(featurePointsCount, featurePointsStride);
+
+    //遍历所有的特征点
+    for (int i = 0; i < featurePointsCount; i++)
+    {
+        if (!IsSamePoint(CenterPoints[index_CenterPoint], FeaturePointInfos[i].nearestPoint) ||
+            FeaturePointInfos[i].distance >= distance_c)
+            continue;
+
+        float _distance = distance(id.xy, FeaturePoints[i]); //计算像素与特征点之间的距离
+        
+        if (_distance >= distance_c)    //该特征点与像素之间的距离比中心点与该像素之间的距离长
+            continue;
+
+        if (_distance < distance_f)
+        {
+            distance_f = _distance;
+            index_FeaturePoint = i;
+        }
+    }
+}
+
+[numthreads(8, 8, 1)]
+void FindNearestPoint(uint3 id : SV_DispatchThreadID)
+{
+    PixelInfo _PixelInfo;
+
+    if(IsFeaturePoint(id))
+    {
+        _PixelInfo.distance = 0;
+        _PixelInfo.nearestPoint = id.xy;
+    }
+    else
+    {
+        float distance_c = 3.402823466e+38F; //像素到中心点的距离
+        int index_CenterPoint = -1; //最近中心点索引
+
+        float distance_f = 3.402823466e+38F; //像素到最近特征点的距离
+        int index_FeaturePoint = -1; //最近特征点索引
+
+        FindCenterPointClosestToPixel(id, distance_c, index_CenterPoint);
+        FindFeaturePointClosestToPixel(id, distance_c, index_CenterPoint, distance_f, index_FeaturePoint);
+
+        if (index_FeaturePoint == -1)    //没有特征点比中心点离该像素更近
+        {
+            _PixelInfo.distance = distance_c;
+            _PixelInfo.nearestPoint = CenterPoints[index_CenterPoint];
+        }
+        else
+        {
+            _PixelInfo.distance = distance_f;
+            _PixelInfo.nearestPoint = FeaturePoints[index_FeaturePoint];
+        }
+    }
+
+    Result[id.x * height + id.y] = _PixelInfo;
+}
+
+/***************寻找离特征点最近的中心点*****************/
+[numthreads(1, 1, 1)]
+void FindNearestCenterPoint(uint3 id : SV_DispatchThreadID)
+{
+    float distance_fc = 3.402823466e+38F;   //特征点到中心点的距离
+    int index_CenterPoint = -1;             //最近中心点索引
+
+    uint centerPointsCount, centerPointsStride;
+    CenterPoints.GetDimensions(centerPointsCount, centerPointsStride);
+
+    for (uint i = 0; i < centerPointsCount; i++)
+    {
+        float _distance = distance(FeaturePoints[id.x], CenterPoints[i]);
+
+        if (_distance < distance_fc)
+        {
+            distance_fc = _distance;
+            index_CenterPoint = i;
+        }
+    }
+
+    PixelInfo _pixelInfo;
+    _pixelInfo.distance = distance_fc;
+    _pixelInfo.nearestPoint = CenterPoints[index_CenterPoint];
+
+    Result[id.x] = _pixelInfo;
+}
+
+/*******/
+
+/*
+ * 需要的全局变量：
+ * FeaturePoints、FeaturePointInfos
+*/
+[numthreads(1, 1, 1)]
+void FindNearestFeaturePoint(uint3 id: SV_DispatchThreadID)
+{
+    float distance_fc = FeaturePointInfos[id.x].distance;    //该特征点到中心的距离
+
+    float distance_ff = 3.402823466e+38F;       //该特征点到特征点的距离
+    int index_FeaturePoint = -1;
+
+    uint featurePointsCount, featurePointsStride;
+    FeaturePoints.GetDimensions(featurePointsCount, featurePointsStride);
+
+    for (uint i = 0; i < featurePointsCount; i++)
+    {
+        //中心点相同且距离小于distance_fc
+        if (!IsSamePoint(FeaturePointInfos[id.x].nearestPoint, FeaturePointInfos[i].nearestPoint) ||
+            FeaturePointInfos[i].distance >= distance_fc)
+            continue;
+
+        float _distance = distance(FeaturePoints[i], FeaturePoints[id.x]);
+
+        if(_distance < distance_ff)
+        {
+            distance_ff = _distance;
+            index_FeaturePoint = i;
+        }
+    }
+
+    PixelInfo _pixelInfo;
+    if(index_FeaturePoint == -1)
+    {
+        _pixelInfo = FeaturePointInfos[id.x];
+    }
+    else
+    {
+        _pixelInfo.distance = distance_ff;
+        _pixelInfo.nearestPoint = FeaturePoints[index_FeaturePoint];
+    }
+
+    Result[id.x] = _pixelInfo;
+}
+
+/*****************生成虫洞*********************/
+Texture2D<float4> MainTex;
+Texture2D<float4> CelluarTex;
+RWTexture2D<float4> ResultTex;
+
+int threshold;
+float3 thresholdColor;
+
+int Color2DEC(float4 color)
+{
+	return (int)(color.r * 255) * 65536 + (int)(color.g * 255) * 256 + (int)(color.b * 255);
+}
+
+float4 DEC2Color(int DEC)
+{
+	float4 color;
+
+	int remain = DEC;
+
+	for (int i = 2; i >= 0; i--)
+	{
+		int mod = remain % 256;
+		remain /= 256;
+
+		color[i] = mod / 255;
+	}
+
+	return color;
+}
+
+bool LessThanThreshold(float4 pixel)
+{
+    //if (pixel.r < threshold.r)
+    //    return true;
+    //else if (pixel.r > threshold.r)
+    //    return false;
+    //else if (pixel.g < threshold.g)
+    //    return true;
+    //else if (pixel.g > threshold.g)
+    //    return false;
+    //else if (pixel.b < threshold.b)
+    //    return true;
+    //else
+    //    return false;
+    return Color2DEC(pixel) < threshold;
+
+}
+
+[numthreads(8, 8, 1)]
+void WormholeCreate(uint3 id : SV_DispatchThreadID)
+{
+    float4 mainTexPixel = MainTex[id.xy];
+    float4 celluarTexPixel = CelluarTex[id.xy];
+
+    if (mainTexPixel.w != 0 && 
+        celluarTexPixel.w != 0 &&
+        LessThanThreshold(celluarTexPixel)
+        )
+        mainTexPixel.w = 0;
+
+    ResultTex[id.xy] = mainTexPixel;
+}
